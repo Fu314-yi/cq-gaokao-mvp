@@ -1,0 +1,120 @@
+<%- include('../_head', {title:'用户登录'}) %>
+
+<div class="max-w-md mx-auto">
+  <div class="bg-white rounded-2xl shadow-lg p-8 mt-6">
+
+    <!-- Logo & 标题 -->
+    <div class="text-center mb-7">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-3">
+        <svg class="w-9 h-9 text-[#c0392b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900">考生 / 家长登录</h2>
+      <p class="text-sm text-gray-400 mt-1">重庆高考志愿审单系统</p>
+    </div>
+
+    <% if (error) { %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-5 flex items-center gap-2">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <%= error %>
+    </div>
+    <% } %>
+
+    <!-- 登录表单 -->
+    <form method="POST" action="/login" class="space-y-5">
+      <input type="hidden" name="redirect" value="<%= redirect %>">
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">手机号</label>
+        <input type="tel" name="phone" required pattern="1\d{10}" maxlength="11"
+               placeholder="请输入注册手机号"
+               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c0392b] focus:border-transparent outline-none transition text-base">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">短信验证码</label>
+        <div class="flex gap-2">
+          <input type="text" name="code" maxlength="6" placeholder="6位验证码"
+                 class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#c0392b] focus:border-transparent outline-none transition text-base">
+          <button type="button" id="btn-sms"
+                  class="px-4 py-3 bg-[#c0392b] hover:bg-[#96281b] text-white text-sm font-medium rounded-xl whitespace-nowrap transition min-w-[90px]">
+            获取验证码
+          </button>
+        </div>
+        <p class="text-xs text-gray-400 mt-1.5">MVP 模式：输入 <span class="font-semibold text-gray-600">888888</span> 即可登录</p>
+      </div>
+
+      <button type="submit"
+              class="w-full py-3 bg-[#c0392b] hover:bg-[#96281b] active:bg-[#7f2517] text-white font-semibold rounded-xl shadow transition text-base mt-2">
+        登 录
+      </button>
+    </form>
+
+    <!-- 分割线 -->
+    <div class="flex items-center gap-3 my-5">
+      <div class="flex-1 h-px bg-gray-200"></div>
+      <span class="text-xs text-gray-400">还没有账号？</span>
+      <div class="flex-1 h-px bg-gray-200"></div>
+    </div>
+
+    <a href="/register"
+       class="block w-full py-3 text-center border border-gray-300 hover:border-[#c0392b] text-gray-600 hover:text-[#c0392b] font-medium rounded-xl transition text-sm">
+      立即注册
+    </a>
+
+    <!-- 管理员入口（低调放置底部） -->
+    <div class="text-center mt-6">
+      <a href="/admin/login" class="text-xs text-gray-400 hover:text-gray-600 transition">
+        管理人员登录 →
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const btnSms = document.getElementById('btn-sms');
+btnSms.addEventListener('click', async () => {
+  const phoneInput = document.querySelector('input[name="phone"]');
+  const phone = phoneInput.value.trim();
+  if (!/^1\d{10}$/.test(phone)) { alert('请输入正确的手机号'); return; }
+  btnSms.disabled = true;
+  btnSms.textContent = '发送中...';
+  try {
+    const res = await fetch('/send-sms', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({phone})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      let sec = 60;
+      btnSms.textContent = sec + 's后重发';
+      const timer = setInterval(() => {
+        sec--;
+        btnSms.textContent = sec + 's后重发';
+        if (sec <= 0) {
+          clearInterval(timer);
+          btnSms.disabled = false;
+          btnSms.textContent = '获取验证码';
+        }
+      }, 1000);
+    } else {
+      alert(data.msg || '发送失败');
+      btnSms.disabled = false;
+      btnSms.textContent = '获取验证码';
+    }
+  } catch(e) {
+    alert('网络错误');
+    btnSms.disabled = false;
+    btnSms.textContent = '获取验证码';
+  }
+});
+</script>
+
+<%- include('../_foot') %>

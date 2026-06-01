@@ -1,0 +1,63 @@
+<%- include('../_head', {title:'审单记录'}) %>
+
+<div class="space-y-6">
+  <!-- 管理后台导航 -->
+  <div class="flex gap-3 text-sm border-b border-gray-200 pb-3">
+    <a href="/admin" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">仪表盘</a>
+    <a href="/admin/users" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">用户管理</a>
+    <a href="/admin/audits" class="px-3 py-1.5 bg-[#c0392b] text-white rounded-lg font-medium">审单记录</a>
+    <a href="/admin/plans" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">志愿库</a>
+    <a href="/admin/export" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">导出CSV</a>
+  </div>
+
+  <!-- 搜索 -->
+  <form method="GET" action="/admin/audits" class="flex gap-2">
+    <input type="text" name="q" value="<%= keyword %>" placeholder="搜索学生姓名"
+           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c0392b] outline-none text-sm">
+    <button type="submit" class="px-4 py-2 bg-[#c0392b] text-white text-sm font-medium rounded-lg hover:bg-[#96281b] transition">搜索</button>
+    <% if (keyword) { %>
+    <a href="/admin/audits" class="px-4 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition">清除</a>
+    <% } %>
+  </form>
+
+  <!-- 审单记录列表 -->
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-left">
+            <th class="px-4 py-3 font-medium">学生ID</th>
+            <th class="px-4 py-3 font-medium">姓名</th>
+            <th class="px-4 py-3 font-medium">位次</th>
+            <th class="px-4 py-3 font-medium">志愿数</th>
+            <th class="px-4 py-3 font-medium">最近操作</th>
+            <th class="px-4 py-3 font-medium">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% records.forEach(r => { %>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-400"><%= r.student_id %></td>
+            <td class="px-4 py-3 font-medium"><%= r.student_name %></td>
+            <td class="px-4 py-3"><%= r.student_rank %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium"><%= r.plan_count %>条</span>
+            </td>
+            <td class="px-4 py-3 text-gray-400 text-xs"><%= r.latest_time %></td>
+            <td class="px-4 py-3">
+              <a href="/report/<%= r.student_id %>" class="text-xs px-2 py-1 rounded bg-[#c0392b] text-white hover:bg-[#96281b] transition">
+                查看报告
+              </a>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (records.length === 0) { %>
+          <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">暂无审单记录</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../_foot') %>

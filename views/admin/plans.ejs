@@ -1,0 +1,192 @@
+<%- include('../_head', {title:'志愿库管理'}) %>
+
+<div class="space-y-6">
+  <!-- 管理后台导航 -->
+  <div class="flex gap-3 text-sm border-b border-gray-200 pb-3 flex-wrap">
+    <a href="/admin" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">仪表盘</a>
+    <a href="/admin/users" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">用户管理</a>
+    <a href="/admin/audits" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">审单记录</a>
+    <a href="/admin/plans" class="px-3 py-1.5 bg-[#c0392b] text-white rounded-lg font-medium">志愿库管理</a>
+    <a href="/admin/export" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">导出数据</a>
+  </div>
+
+  <!-- 页面标题 -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">志愿库管理</h2>
+      <p class="text-sm text-gray-500 mt-0.5">管理招生计划数据，供审单时匹配体检受限、收费类型等补充信息</p>
+    </div>
+    <div class="text-right">
+      <div class="text-2xl font-bold text-gray-900"><%= planCount %></div>
+      <div class="text-xs text-gray-400">当前总条数</div>
+    </div>
+  </div>
+
+  <!-- 状态提示 -->
+  <% if (msg) { %>
+  <div class="rounded-xl p-4 text-sm <%= msg.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700' %>">
+    <%= msg.text %>
+  </div>
+  <% } %>
+
+  <!-- 导入志愿库 -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h3 class="font-bold text-gray-900 text-base mb-1 flex items-center gap-2">
+      <svg class="w-5 h-5 text-[#c0392b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+      </svg>
+      导入招生计划数据
+    </h3>
+    <p class="text-sm text-gray-500 mb-4">
+      上传 Excel 格式的招生计划表（plans_cq 格式），用于补充体检受限标签、收费类型、选科要求等信息。
+      <span class="text-amber-600 font-medium">不影响用户上传表格自带的录取位次数据。</span>
+    </p>
+
+    <!-- 下载模板 -->
+    <a href="/upload/template-plans"
+       class="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg transition mb-4">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+      </svg>
+      下载志愿库模板（Excel）
+    </a>
+
+    <form method="POST" action="/admin/plans/import" enctype="multipart/form-data" id="plansForm">
+      <div id="plansDropZone"
+           class="border-2 border-dashed border-gray-200 hover:border-gray-400 rounded-xl p-8 text-center cursor-pointer transition bg-gray-50"
+           onclick="document.getElementById('plansFileInput').click()">
+        <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-sm text-gray-400" id="plansFileName">点击选择 Excel 文件，或拖拽到此处</p>
+        <p class="text-xs text-gray-300 mt-1">支持 .xlsx / .xls</p>
+        <input type="file" id="plansFileInput" name="file" accept=".xlsx,.xls" class="hidden"
+               onchange="document.getElementById('plansFileName').textContent = this.files[0]?.name || '点击选择文件'"/>
+      </div>
+
+      <div class="mt-3 flex gap-3 items-center">
+        <button type="submit" id="plansSubmitBtn"
+                class="px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold rounded-lg transition">
+          导入志愿库
+        </button>
+        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input type="checkbox" name="clear_before" value="1" class="rounded" />
+          导入前清空现有数据
+        </label>
+      </div>
+    </form>
+    <div id="plansResult" class="mt-3 text-sm"></div>
+  </div>
+
+  <!-- 当前志愿库预览 -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-gray-900 text-base">当前志愿库数据预览</h3>
+      <% if (planCount > 0) { %>
+      <form method="POST" action="/admin/plans/clear" onsubmit="return confirm('确认清空全部志愿库数据？此操作不可恢复。')">
+        <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg border border-red-200 transition">
+          清空志愿库
+        </button>
+      </form>
+      <% } %>
+    </div>
+
+    <% if (plans.length === 0) { %>
+    <div class="text-center py-10 text-gray-400">
+      <svg class="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <p class="text-sm">志愿库为空，暂无招生计划数据</p>
+      <p class="text-xs mt-1">用户上传的志愿表可独立进行位次比对，无需志愿库</p>
+    </div>
+    <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-xs text-gray-500">
+          <tr>
+            <th class="px-3 py-2.5 text-left">院校名称</th>
+            <th class="px-3 py-2.5 text-left">专业名称</th>
+            <th class="px-3 py-2.5 text-left">选科要求</th>
+            <th class="px-3 py-2.5 text-center">2025最低位次</th>
+            <th class="px-3 py-2.5 text-center">2024最低位次</th>
+            <th class="px-3 py-2.5 text-left">收费类型</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% plans.forEach(p => { %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-3 py-2.5 font-medium text-gray-900"><%= p.school_name %></td>
+            <td class="px-3 py-2.5 text-gray-700"><%= p.major_name %></td>
+            <td class="px-3 py-2.5 text-xs text-gray-500"><%= p.selection_req || '不限' %></td>
+            <td class="px-3 py-2.5 text-center font-mono text-xs text-gray-600"><%= p.min_rank_2025 ? p.min_rank_2025.toLocaleString() : '—' %></td>
+            <td class="px-3 py-2.5 text-center font-mono text-xs text-gray-600"><%= p.min_rank_2024 ? p.min_rank_2024.toLocaleString() : '—' %></td>
+            <td class="px-3 py-2.5 text-xs">
+              <% if (p.tuition_tag && p.tuition_tag.includes('中外合作')) { %>
+              <span class="px-1.5 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded text-xs">中外合作</span>
+              <% } else { %>
+              <span class="text-gray-400"><%= p.tuition_tag || '—' %></span>
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% if (planCount > plans.length) { %>
+      <p class="text-xs text-gray-400 text-center py-3">仅显示前 100 条，共 <%= planCount %> 条数据</p>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+// 拖拽支持
+(function() {
+  const zone = document.getElementById('plansDropZone');
+  const inp  = document.getElementById('plansFileInput');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('border-gray-400'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('border-gray-400'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('border-gray-400');
+    const f = e.dataTransfer.files[0];
+    if (f) {
+      const dt = new DataTransfer(); dt.items.add(f);
+      inp.files = dt.files;
+      document.getElementById('plansFileName').textContent = f.name;
+    }
+  });
+})();
+
+// 志愿库导入用 AJAX
+document.getElementById('plansForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('plansSubmitBtn');
+  const resultEl = document.getElementById('plansResult');
+  btn.textContent = '导入中…';
+  btn.disabled = true;
+  resultEl.innerHTML = '<span class="text-gray-400">正在导入，请稍候…</span>';
+  try {
+    const resp = await fetch('/admin/plans/import', { method: 'POST', body: new FormData(this) });
+    const data = await resp.json();
+    if (data.ok) {
+      resultEl.innerHTML = `<div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3">
+        ✅ 导入完成：共 <strong>${data.total}</strong> 行，写入 <strong>${data.inserted}</strong> 条，跳过 <strong>${data.skipped}</strong> 条。
+        <a href="/admin/plans" class="underline ml-2">刷新查看</a>
+      </div>`;
+    } else {
+      resultEl.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3">❌ 导入失败：${data.error}</div>`;
+    }
+  } catch(err) {
+    resultEl.innerHTML = `<div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3">❌ 请求失败：${err.message}</div>`;
+  } finally {
+    btn.textContent = '导入志愿库';
+    btn.disabled = false;
+  }
+});
+</script>
+
+<%- include('../_foot') %>

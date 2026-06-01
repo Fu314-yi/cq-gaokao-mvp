@@ -1,0 +1,36 @@
+<%- include('_head', {title:'审单报告'}) %>
+
+<h1 class="text-xl font-bold text-gray-900 mb-6">审单报告</h1>
+
+<% if(!students || !students.length) { %>
+<div class="bg-white rounded-xl shadow p-12 text-center text-gray-400">
+  <p>暂无学生，请先<a href="/student/new" class="text-[#c0392b] hover:underline">新建学生档案</a></p>
+</div>
+<% } else { %>
+<div class="bg-white rounded-xl shadow overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+      <tr>
+        <th class="px-4 py-3 text-left">姓名</th>
+        <th class="px-4 py-3 text-right">总分</th>
+        <th class="px-4 py-3 text-right">全市位次</th>
+        <th class="px-4 py-3 text-center">操作</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% students.forEach(s => { %>
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-3 font-medium"><%= s.name %></td>
+        <td class="px-4 py-3 text-right"><%= s.total_score %></td>
+        <td class="px-4 py-3 text-right"><%= s.rank.toLocaleString() %></td>
+        <td class="px-4 py-3 text-center">
+          <a href="/report/<%= s.id %>" class="text-[#c0392b] hover:underline text-sm">查看报告 →</a>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% } %>
+
+<%- include('_foot') %>

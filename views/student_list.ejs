@@ -1,0 +1,61 @@
+<%- include('_head', {title:'学生档案列表'}) %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-bold text-gray-900">学生档案列表</h1>
+  <a href="/student/new"
+     class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#c0392b] hover:bg-[#96281b] text-white text-sm font-semibold rounded-lg transition">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    新建学生
+  </a>
+</div>
+
+<% if(!list || !list.length) { %>
+<div class="bg-white rounded-xl shadow p-12 text-center text-gray-400">
+  <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+  </svg>
+  <p>暂无学生档案，点击上方按钮新建</p>
+</div>
+<% } else { %>
+<div class="bg-white rounded-xl shadow overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+      <tr>
+        <th class="px-4 py-3 text-left">姓名</th>
+        <th class="px-4 py-3 text-left">首选</th>
+        <th class="px-4 py-3 text-left">再选</th>
+        <th class="px-4 py-3 text-right">总分</th>
+        <th class="px-4 py-3 text-right">全市位次</th>
+        <th class="px-4 py-3 text-left">创建时间</th>
+        <th class="px-4 py-3 text-center">操作</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% list.forEach(s => { %>
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-4 py-3 font-medium text-gray-900"><%= s.name %></td>
+        <td class="px-4 py-3">
+          <span class="px-2 py-0.5 rounded text-xs font-medium
+            <%= s.prime==='物理' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700' %>">
+            <%= s.prime %>
+          </span>
+        </td>
+        <td class="px-4 py-3 text-gray-600"><%= s.elective1 %> / <%= s.elective2 %></td>
+        <td class="px-4 py-3 text-right font-semibold text-gray-900"><%= s.total_score %></td>
+        <td class="px-4 py-3 text-right text-gray-600"><%= s.rank.toLocaleString() %></td>
+        <td class="px-4 py-3 text-gray-400 text-xs"><%= s.created_at.slice(0,16) %></td>
+        <td class="px-4 py-3 text-center">
+          <a href="/student/<%= s.id %>" class="text-[#c0392b] hover:underline mr-3">详情</a>
+          <a href="/report/<%= s.id %>" class="text-blue-600 hover:underline">审单</a>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<% } %>
+
+<%- include('_foot') %>

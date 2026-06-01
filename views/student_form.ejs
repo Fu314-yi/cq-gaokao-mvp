@@ -1,0 +1,400 @@
+<%- include('_head', {title: (student && student.id ? '编辑' : '新建') + '学生档案'}) %>
+
+<%
+/* 辅助：回填旧值 */
+const v  = student || {};
+const bf = v.body_flags_json  ? JSON.parse(v.body_flags_json)  : [];
+const bt = v.bonus_tags_json  ? JSON.parse(v.bonus_tags_json)  : [];
+const at = v.accepted_tuition_tags ? JSON.parse(v.accepted_tuition_tags) : [];
+const el = [v.elective1, v.elective2].filter(Boolean);
+%>
+
+<div class="max-w-3xl mx-auto">
+
+  <!-- 页头 -->
+  <div class="mb-6 flex items-center gap-3">
+    <a href="/student" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <h1 class="text-xl font-bold text-gray-900">
+      <%= student && student.id ? '编辑学生档案' : '新建学生档案' %>
+    </h1>
+  </div>
+
+  <!-- 错误提示 -->
+  <% if(errors && errors.length) { %>
+  <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded-lg p-4 text-sm">
+    <ul class="list-disc list-inside space-y-1">
+      <% errors.forEach(e => { %><li><%= e %></li><% }) %>
+    </ul>
+  </div>
+  <% } %>
+
+  <form id="studentForm" method="POST"
+        action="<%= (student && student.id) ? '/student/' + student.id + '/edit' : '/student/new' %>"
+        class="space-y-6">
+
+    <!-- ① 基本信息 -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b flex items-center gap-2">
+        <span class="w-5 h-5 rounded-full bg-[#c0392b] text-white text-xs flex items-center justify-center">1</span>
+        基本信息
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- 姓名 -->
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">姓名 <span class="text-red-500">*</span></label>
+          <input type="text" name="name" value="<%= v.name || '' %>"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                 placeholder="请输入学生姓名" required/>
+        </div>
+        <!-- 民族 -->
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">民族</label>
+          <select name="nation"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 bg-white">
+            <% ['汉族','苗族','土家族','回族','满族','彝族','壮族','藏族','其他'].forEach(n => { %>
+            <option value="<%= n %>" <%= (v.nation === n) ? 'selected' : '' %>><%= n %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ② 选科 -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b flex items-center gap-2">
+        <span class="w-5 h-5 rounded-full bg-[#c0392b] text-white text-xs flex items-center justify-center">2</span>
+        选科情况（重庆新高考 3+1+2）
+      </h2>
+
+      <!-- 首选科目 radio -->
+      <div class="mb-5">
+        <p class="text-sm text-gray-600 mb-2">首选科目 <span class="text-red-500">*</span></p>
+        <div class="flex gap-6">
+          <% ['物理','历史'].forEach(p => { %>
+          <label class="flex items-center gap-2 cursor-pointer select-none group">
+            <input type="radio" name="prime" value="<%= p %>"
+                   <%= (v.prime === p) ? 'checked' : '' %>
+                   class="w-4 h-4 accent-[#c0392b]" required/>
+            <span class="text-sm font-medium text-gray-700 group-hover:text-[#c0392b] transition">
+              <%= p %>
+            </span>
+          </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- 再选科目 checkbox（勾2个） -->
+      <div>
+        <p class="text-sm text-gray-600 mb-2">
+          再选科目 <span class="text-red-500">*</span>
+          <span class="text-xs text-gray-400 ml-1">（恰好勾选 2 门）</span>
+        </p>
+        <div class="flex flex-wrap gap-4" id="electiveGroup">
+          <% ['化学','生物','政治','地理'].forEach(e => { %>
+          <label class="flex items-center gap-2 cursor-pointer select-none group">
+            <input type="checkbox" name="electives" value="<%= e %>"
+                   <%= el.includes(e) ? 'checked' : '' %>
+                   class="w-4 h-4 accent-[#c0392b] elective-cb"/>
+            <span class="text-sm font-medium text-gray-700 group-hover:text-[#c0392b] transition">
+              <%= e %>
+            </span>
+          </label>
+          <% }) %>
+        </div>
+        <p id="electiveHint" class="text-xs text-red-500 mt-1 hidden">请恰好选择 2 门再选科目</p>
+      </div>
+    </section>
+
+    <!-- ③ 成绩与位次 -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b flex items-center gap-2">
+        <span class="w-5 h-5 rounded-full bg-[#c0392b] text-white text-xs flex items-center justify-center">3</span>
+        成绩与位次
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">高考总分 <span class="text-red-500">*</span></label>
+          <input type="number" name="total_score" id="totalScore"
+                 value="<%= v.total_score != null ? v.total_score : '' %>"
+                 min="0" max="750"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                 placeholder="例：598" required/>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">全市位次 <span class="text-red-500">*</span>
+            <span class="text-xs text-gray-400">（同分同位次段）</span>
+          </label>
+          <input type="number" name="rank" value="<%= v.rank || '' %>"
+                 min="1"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                 placeholder="例：8500" required/>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">政策加分（分值）
+            <span class="text-xs text-gray-400">0~20</span>
+          </label>
+          <input type="number" name="bonus" id="bonusScore"
+                 value="<%= v.bonus != null ? v.bonus : 0 %>"
+                 min="0" max="20"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                 placeholder="0"/>
+        </div>
+      </div>
+
+      <!-- 投档分 -->
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex-1 min-w-[160px]">
+            <label class="block text-sm text-gray-600 mb-1">
+              投档分（加分后）
+              <span class="text-xs text-gray-400 ml-1">自动 = 总分 + 政策加分；可手动覆盖</span>
+            </label>
+            <input type="number" name="filing_score" id="filingScore"
+                   value="<%= v.filing_score != null ? v.filing_score : '' %>"
+                   min="0" max="800"
+                   class="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-white"
+                   placeholder="自动计算中…"/>
+          </div>
+          <button type="button" id="resetFilingScore"
+                  class="mt-5 px-3 py-2 text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg transition border border-amber-300">
+            重置为自动值
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ④ 加分标签 -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b flex items-center gap-2">
+        <span class="w-5 h-5 rounded-full bg-[#c0392b] text-white text-xs flex items-center justify-center">4</span>
+        加分标签
+        <span class="text-xs text-gray-400 font-normal">（仅展示标签，不自动修改加分分值）</span>
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <%
+        const bonusTags = [
+          { val:'民族加分5分',   desc:'少数民族聚居地区考生加5分' },
+          { val:'民族加分10分',  desc:'特定少数民族考生加10分' },
+          { val:'民族加分15分',  desc:'特定少数民族考生加15分' },
+          { val:'烈士子女',      desc:'烈士子女加20分' },
+          { val:'退役军人',      desc:'自主就业退役士兵加10分' },
+          { val:'自主就业军人子女', desc:'参加艰苦边远地区服役军人子女' },
+        ];
+        %>
+        <% bonusTags.forEach(item => { %>
+        <label class="flex items-start gap-2 p-3 rounded-lg border border-gray-200 hover:border-[#c0392b] hover:bg-red-50 cursor-pointer transition group">
+          <input type="checkbox" name="bonus_tags" value="<%= item.val %>"
+                 <%= bt.includes(item.val) ? 'checked' : '' %>
+                 class="mt-0.5 w-4 h-4 accent-[#c0392b] shrink-0"/>
+          <div>
+            <p class="text-sm font-medium text-gray-700 group-hover:text-[#c0392b]"><%= item.val %></p>
+            <p class="text-xs text-gray-400"><%= item.desc %></p>
+          </div>
+        </label>
+        <% }) %>
+      </div>
+    </section>
+
+    <!-- ⑤ 身体受限标签 -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b flex items-center gap-2">
+        <span class="w-5 h-5 rounded-full bg-[#c0392b] text-white text-xs flex items-center justify-center">5</span>
+        身体受限标签
+        <span class="text-xs text-gray-400 font-normal">（参照高校体检指导意见，勾选实际情况）</span>
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <%
+        const bodyItems = [
+          { val:'色弱(01)',       desc:'轻度辨色力异常，部分专业受限' },
+          { val:'色盲(02)',       desc:'严重辨色力异常，较多专业受限' },
+          { val:'视力要求高(03)', desc:'单眼裸视力低于4.8 / 双眼均低于4.8' },
+          { val:'矫正视力异常(04)',desc:'矫正后仍低于4.8（飞行/军警等）' },
+          { val:'身高门槛(05)',   desc:'男<160cm 或 女<150cm，少数专业受限' },
+          { val:'听力障碍(06)',   desc:'轻中度听力损失' },
+          { val:'口腔/口吃(07)', desc:'口腔缺陷或口吃' },
+          { val:'肢体残疾(08)',   desc:'上下肢功能受限' },
+          { val:'乙肝病毒携带(09)',desc:'乙肝表面抗原阳性' },
+          { val:'传染性皮肤病(10)',desc:'活动性传染性皮肤病' },
+          { val:'精神疾病史(11)', desc:'既往精神疾病诊断' },
+          { val:'心脏疾病(12)',   desc:'心脏器质性病变或功能异常' },
+        ];
+        %>
+        <% bodyItems.forEach(item => { %>
+        <label class="flex items-start gap-2 p-3 rounded-lg border border-gray-200 hover:border-orange-400 hover:bg-orange-50 cursor-pointer transition group">
+          <input type="checkbox" name="body_flags" value="<%= item.val %>"
+                 <%= bf.includes(item.val) ? 'checked' : '' %>
+                 class="mt-0.5 w-4 h-4 accent-orange-500 shrink-0"/>
+          <div>
+            <p class="text-sm font-medium text-gray-700 group-hover:text-orange-600"><%= item.val %></p>
+            <p class="text-xs text-gray-400"><%= item.desc %></p>
+          </div>
+        </label>
+        <% }) %>
+      </div>
+    </section>
+
+    <!-- ⑥ 接受的收费标签 -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b flex items-center gap-2">
+        <span class="w-5 h-5 rounded-full bg-[#c0392b] text-white text-xs flex items-center justify-center">6</span>
+        收费标签确认
+        <span class="text-xs text-gray-400 font-normal">（勾选表示家庭接受该类收费专业，未勾选则在审单时预警）</span>
+      </h2>
+      <div class="flex flex-wrap gap-4">
+        <%
+        const tuitionTags = [
+          { val:'中外合作',     desc:'中外合作办学专业，学费通常 3~10 万/年' },
+          { val:'地方专项',     desc:'地方专项计划，限指定区域考生' },
+          { val:'国家专项',     desc:'国家专项计划，限指定区域考生' },
+          { val:'民办院校',     desc:'民办高校，学费通常 2~4 万/年' },
+          { val:'预科',         desc:'预科班，多读一年' },
+        ];
+        %>
+        <% tuitionTags.forEach(item => { %>
+        <label class="flex items-start gap-2 p-3 rounded-lg border border-gray-200 hover:border-[#c0392b] hover:bg-red-50 cursor-pointer transition group min-w-[180px]">
+          <input type="checkbox" name="accepted_tuition_tags" value="<%= item.val %>"
+                 <%= at.includes(item.val) ? 'checked' : '' %>
+                 class="mt-0.5 w-4 h-4 accent-[#c0392b] shrink-0"/>
+          <div>
+            <p class="text-sm font-medium text-gray-700 group-hover:text-[#c0392b]"><%= item.val %></p>
+            <p class="text-xs text-gray-400"><%= item.desc %></p>
+          </div>
+        </label>
+        <% }) %>
+      </div>
+    </section>
+
+    <!-- ⑦ 体格数据（可选） -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+        <span class="w-5 h-5 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center">7</span>
+        体格数据
+        <span class="text-xs text-gray-400 font-normal">（可选，用于精准对比专业体检要求）</span>
+      </h2>
+      <p class="text-xs text-gray-400 mb-4">如不填写则在审单时跳过相关条目校验</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">身高 (cm)</label>
+          <input type="number" name="height_cm"
+                 value="<%= v.height_cm != null ? v.height_cm : '' %>"
+                 min="100" max="230" step="0.1"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                 placeholder="例：172.5"/>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">体重 (kg)</label>
+          <input type="number" name="weight_kg"
+                 value="<%= v.weight_kg != null ? v.weight_kg : '' %>"
+                 min="30" max="200" step="0.1"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                 placeholder="例：60.0"/>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">裸眼视力 左眼</label>
+          <input type="number" name="vision_l"
+                 value="<%= v.vision_l != null ? v.vision_l : '' %>"
+                 min="0" max="6.0" step="0.1"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                 placeholder="例：4.6"/>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">裸眼视力 右眼</label>
+          <input type="number" name="vision_r"
+                 value="<%= v.vision_r != null ? v.vision_r : '' %>"
+                 min="0" max="6.0" step="0.1"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                 placeholder="例：4.7"/>
+        </div>
+      </div>
+    </section>
+
+    <!-- 提交按钮 -->
+    <div class="flex gap-3 pb-6">
+      <button type="submit" id="submitBtn"
+              class="px-8 py-2.5 bg-[#c0392b] hover:bg-[#96281b] text-white font-semibold rounded-lg transition text-sm shadow">
+        保存并进入填报
+      </button>
+      <a href="/student"
+         class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition text-sm">
+        取消
+      </a>
+    </div>
+
+  </form>
+</div>
+
+<script>
+(function() {
+  /* ── 投档分自动计算 ── */
+  const totalInput  = document.getElementById('totalScore');
+  const bonusInput  = document.getElementById('bonusScore');
+  const filingInput = document.getElementById('filingScore');
+  const resetBtn    = document.getElementById('resetFilingScore');
+
+  let userOverride = filingInput.value !== '';
+
+  function calcFiling() {
+    const t = parseInt(totalInput.value)  || 0;
+    const b = parseInt(bonusInput.value)  || 0;
+    return t + b;
+  }
+
+  function autoFill() {
+    if (!userOverride) {
+      const val = calcFiling();
+      filingInput.value = val > 0 ? val : '';
+    }
+  }
+
+  totalInput.addEventListener('input',  autoFill);
+  bonusInput.addEventListener('input',  autoFill);
+  filingInput.addEventListener('input', () => { userOverride = true; });
+  resetBtn.addEventListener('click', () => {
+    userOverride = false;
+    autoFill();
+  });
+
+  // 初始化（编辑模式下 total/bonus 已有值时不覆盖手动投档分）
+  if (!userOverride && filingInput.value === '') autoFill();
+
+  /* ── 再选科目：最多勾2个 ── */
+  const cbs   = document.querySelectorAll('.elective-cb');
+  const hint  = document.getElementById('electiveHint');
+
+  function updateElective() {
+    const checked = document.querySelectorAll('.elective-cb:checked');
+    if (checked.length >= 2) {
+      cbs.forEach(cb => { if (!cb.checked) cb.disabled = true; });
+    } else {
+      cbs.forEach(cb => { cb.disabled = false; });
+    }
+  }
+  cbs.forEach(cb => cb.addEventListener('change', updateElective));
+  updateElective(); // 初始化
+
+  /* ── 表单提交校验 ── */
+  document.getElementById('studentForm').addEventListener('submit', function(e) {
+    const checked = document.querySelectorAll('.elective-cb:checked');
+    if (checked.length !== 2) {
+      e.preventDefault();
+      hint.classList.remove('hidden');
+      hint.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    hint.classList.add('hidden');
+    // 勾选的两门注入为 elective1/elective2
+    const vals = [...checked].map(c => c.value);
+    // 把 name 临时改为 elective1 elective2
+    checked[0].name = 'elective1';
+    checked[1].name = 'elective2';
+    // 禁用其他未选的，避免提交空值
+    cbs.forEach(cb => { if (!cb.checked) cb.disabled = true; });
+  });
+})();
+</script>
+
+<%- include('_foot') %>

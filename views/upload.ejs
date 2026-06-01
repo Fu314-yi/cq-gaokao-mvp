@@ -1,0 +1,145 @@
+<%- include('_head', {title: student ? '导入志愿 — ' + student.name : '导入志愿'}) %>
+
+<div class="max-w-2xl mx-auto">
+
+  <!-- 标题区 -->
+  <div class="flex items-center gap-3 mb-6">
+    <% if (student) { %>
+    <a href="/student/<%= student.id %>"
+       class="text-gray-400 hover:text-gray-600 transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">导入志愿表</h1>
+      <p class="text-sm text-gray-500">当前学生：<strong class="text-[#c0392b]"><%= student.name %></strong></p>
+    </div>
+    <% } else { %>
+    <h1 class="text-xl font-bold text-gray-900">导入志愿</h1>
+    <% } %>
+  </div>
+
+  <!-- 错误提示 -->
+  <% if(error) { %>
+  <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded-xl p-4 text-sm flex items-start gap-2">
+    <svg class="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+    </svg>
+    <%= error %>
+  </div>
+  <% } %>
+
+  <!-- 温馨提示 -->
+  <div class="mb-5 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800 leading-6">
+    <p class="font-semibold mb-1">📋 使用说明</p>
+    <p>请直接上传您的志愿草稿 Excel 文件，系统将自动解析并进行审单分析。志愿表中需包含近年录取位次数据，作为评估依据。</p>
+  </div>
+
+  <!-- 上传志愿表 xlsx -->
+  <div class="bg-white rounded-xl shadow p-6 mb-5">
+    <h2 class="font-bold text-gray-900 text-base mb-4 flex items-center gap-2">
+      <span class="w-6 h-6 rounded-full bg-[#c0392b] text-white text-xs flex items-center justify-center font-bold">1</span>
+      上传志愿表 Excel
+    </h2>
+
+    <div class="mb-4 bg-gray-50 rounded-lg px-4 py-3 text-xs text-gray-500 leading-5">
+      <p class="font-medium text-gray-600 mb-1">Excel 格式说明（按列顺序）：</p>
+      <div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
+        <span>• <b>序号</b>：志愿序号（1,2,3…）</span>
+        <span>• <b>院校代码</b>：学校代码</span>
+        <span>• <b>院校</b>：学校名称 <span class="text-red-500">*必填</span></span>
+        <span>• <b>层次</b>：本科/专科</span>
+        <span>• <b>地区/城市</b>：所在城市</span>
+        <span>• <b>类型</b>：综合/理工/师范…</span>
+        <span>• <b>性质</b>：公办/民办</span>
+        <span>• <b>排名 / 升学率 / 保研率</b></span>
+        <span>• <b>专业代码</b></span>
+        <span>• <b>专业</b>：专业名称 <span class="text-red-500">*必填</span></span>
+        <span>• <b>计划 / 学费 / 学制</b></span>
+        <span>• <b>选科</b>：如 历史+不限</span>
+        <span>• <b>2025（近三年）</b>：最低位次/录取分等</span>
+        <span>• <b>2024 / 2023</b>：同上（允许空）</span>
+      </div>
+    </div>
+
+    <% if (!student) { %>
+    <div class="mb-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg p-3 text-sm">
+      ⚠️ 未指定学生。请先从
+      <a href="/student" class="underline font-medium">学生列表</a>
+      选择学生，或从学生详情页点击"导入志愿"进入此页面。
+    </div>
+    <% } %>
+
+    <form method="POST" action="/upload" enctype="multipart/form-data" id="draftForm">
+      <input type="hidden" name="student_id" value="<%= student ? student.id : '' %>">
+
+      <div id="draftDropZone"
+           class="border-2 border-dashed border-gray-300 hover:border-[#c0392b] rounded-xl p-10 text-center cursor-pointer transition bg-gray-50"
+           onclick="document.getElementById('draftFileInput').click()">
+        <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        <p class="text-sm text-gray-500 font-medium" id="draftFileName">点击选择文件，或拖拽到此处</p>
+        <p class="text-xs text-gray-400 mt-1">支持 .xlsx / .xls，最大 10MB</p>
+        <input type="file" id="draftFileInput" name="file" accept=".xlsx,.xls" class="hidden"
+               onchange="document.getElementById('draftFileName').textContent = this.files[0]?.name || '点击选择文件'"/>
+      </div>
+
+      <div class="mt-4 flex gap-3">
+        <button type="submit" id="draftSubmitBtn"
+                class="px-6 py-3 bg-[#c0392b] hover:bg-[#96281b] text-white font-semibold rounded-lg transition text-sm disabled:opacity-50 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          上传并分析
+        </button>
+        <% if (student) { %>
+        <a href="/student/<%= student.id %>"
+           class="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition text-sm">
+          返回档案
+        </a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<script>
+// 拖拽支持
+(function() {
+  const zone = document.getElementById('draftDropZone');
+  const inp  = document.getElementById('draftFileInput');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('border-[#c0392b]', 'bg-red-50');
+  });
+  zone.addEventListener('dragleave', () => {
+    zone.classList.remove('border-[#c0392b]', 'bg-red-50');
+  });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('border-[#c0392b]', 'bg-red-50');
+    const f = e.dataTransfer.files[0];
+    if (f) {
+      const dt = new DataTransfer(); dt.items.add(f);
+      inp.files = dt.files;
+      document.getElementById('draftFileName').textContent = f.name;
+    }
+  });
+})();
+
+// 提交 loading
+document.getElementById('draftForm')?.addEventListener('submit', function() {
+  const btn = document.getElementById('draftSubmitBtn');
+  if (btn) {
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> 解析中，请稍候…';
+    btn.disabled = true;
+  }
+});
+</script>
+
+<%- include('_foot') %>

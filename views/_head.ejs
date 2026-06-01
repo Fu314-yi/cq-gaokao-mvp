@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title><%= locals.title ? title + ' — ' : '' %>重庆志愿审单</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme:{extend:{colors:{brand:{DEFAULT:'#c0392b',dark:'#96281b',light:'#e74c3c'}}}}
+    }
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+<header class="bg-[#c0392b] shadow-md">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 text-white font-bold text-lg hover:opacity-90">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      重庆志愿审单
+    </a>
+    <div class="flex items-center gap-4">
+      <% if (locals.user) { %>
+        <nav class="flex gap-4 text-sm text-red-100">
+          <a href="/" class="hover:text-white transition">首页</a>
+          <% if (locals.user.role !== 'admin') { %>
+          <a href="/student" class="hover:text-white transition">学生档案</a>
+          <a href="/student/new" class="hover:text-white transition">新建审单</a>
+          <a href="/upload" class="hover:text-white transition">导入志愿库</a>
+          <a href="/report" class="hover:text-white transition">审单报告</a>
+          <% } %>
+        </nav>
+        <div class="flex items-center gap-3 ml-3 pl-3 border-l border-red-400">
+          <% if (locals.user.role === 'admin') { %>
+            <!-- 管理员：显示身份标签 + 后台入口 + 退出 -->
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-400/20 border border-yellow-400/40 rounded text-yellow-200 text-xs font-medium">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              管理员
+            </span>
+            <a href="/admin" class="text-yellow-200 hover:text-white text-sm font-medium transition">管理后台</a>
+          <% } else { %>
+            <!-- 普通用户：显示昵称 -->
+            <span class="text-white text-sm font-medium"><%= locals.user.nickname || locals.user.phone %></span>
+          <% } %>
+          <a href="/logout" class="text-red-200 hover:text-white text-sm transition">退出</a>
+        </div>
+      <% } else { %>
+        <nav class="flex gap-4 text-sm text-red-100">
+          <a href="/" class="hover:text-white transition">首页</a>
+        </nav>
+        <div class="flex items-center gap-3 ml-3 pl-3 border-l border-red-400">
+          <a href="/login" class="text-white text-sm font-medium hover:opacity-90 transition">登录</a>
+          <a href="/register" class="bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-3 py-1 rounded-lg transition">注册</a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</header>
+<main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8">

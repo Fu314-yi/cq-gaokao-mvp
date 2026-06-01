@@ -1,0 +1,149 @@
+<%- include('../_head', {title:'注册'}) %>
+
+<div class="max-w-md mx-auto">
+  <div class="bg-white rounded-xl shadow-lg p-8 mt-8">
+    <!-- Logo -->
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-3">
+        <svg class="w-8 h-8 text-[#c0392b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900">注册</h2>
+      <p class="text-sm text-gray-500 mt-1">创建重庆志愿审单系统账号</p>
+    </div>
+
+    <% if (error) { %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+      <%= error %>
+    </div>
+    <% } %>
+
+    <form method="POST" action="/register" class="space-y-4">
+      <!-- 手机号 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">手机号 <span class="text-red-500">*</span></label>
+        <input type="tel" name="phone" required pattern="1\d{10}" maxlength="11"
+               placeholder="请输入手机号"
+               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c0392b] focus:border-transparent outline-none transition">
+      </div>
+
+      <!-- 验证码 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">验证码 <span class="text-red-500">*</span></label>
+        <div class="flex gap-2">
+          <input type="text" name="code" maxlength="6" placeholder="请输入验证码" required
+                 class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c0392b] focus:border-transparent outline-none transition">
+          <button type="button" id="btn-sms"
+                  class="px-4 py-2.5 bg-[#c0392b] hover:bg-[#96281b] text-white text-sm font-medium rounded-lg whitespace-nowrap transition">
+            获取验证码
+          </button>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">MVP模式：输入 888888 即可</p>
+      </div>
+
+      <!-- 昵称 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">昵称</label>
+        <input type="text" name="nickname" maxlength="20" placeholder="选填，方便称呼您"
+               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c0392b] focus:border-transparent outline-none transition">
+      </div>
+
+      <!-- 年级 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">学生年级 <span class="text-red-500">*</span></label>
+        <select name="grade" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c0392b] focus:border-transparent outline-none transition bg-white">
+          <option value="">请选择年级</option>
+          <option value="高三">高三（2026届）</option>
+          <option value="高二">高二（2027届）</option>
+          <option value="高一">高一（2028届）</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+
+      <!-- 地区 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">所在区县 <span class="text-red-500">*</span></label>
+        <select name="region" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c0392b] focus:border-transparent outline-none transition bg-white">
+          <option value="">请选择区县</option>
+          <option value="渝中区">渝中区</option><option value="大渡口区">大渡口区</option>
+          <option value="江北区">江北区</option><option value="沙坪坝区">沙坪坝区</option>
+          <option value="九龙坡区">九龙坡区</option><option value="南岸区">南岸区</option>
+          <option value="北碚区">北碚区</option><option value="渝北区">渝北区</option>
+          <option value="巴南区">巴南区</option><option value="万州区">万州区</option>
+          <option value="涪陵区">涪陵区</option><option value="黔江区">黔江区</option>
+          <option value="长寿区">长寿区</option><option value="江津区">江津区</option>
+          <option value="合川区">合川区</option><option value="永川区">永川区</option>
+          <option value="南川区">南川区</option><option value="綦江区">綦江区</option>
+          <option value="大足区">大足区</option><option value="铜梁区">铜梁区</option>
+          <option value="潼南区">潼南区</option><option value="荣昌区">荣昌区</option>
+          <option value="开州区">开州区</option><option value="梁平区">梁平区</option>
+          <option value="武隆区">武隆区</option><option value="城口县">城口县</option>
+          <option value="丰都县">丰都县</option><option value="垫江县">垫江县</option>
+          <option value="忠县">忠县</option><option value="云阳县">云阳县</option>
+          <option value="奉节县">奉节县</option><option value="巫山县">巫山县</option>
+          <option value="巫溪县">巫溪县</option><option value="石柱县">石柱县</option>
+          <option value="秀山县">秀山县</option><option value="酉阳县">酉阳县</option>
+          <option value="彭水县">彭水县</option>
+        </select>
+      </div>
+
+      <!-- 用户协议 -->
+      <div class="flex items-start gap-2">
+        <input type="checkbox" name="agreement" value="1" id="agreement" required
+               class="mt-1 w-4 h-4 text-[#c0392b] border-gray-300 rounded focus:ring-[#c0392b]">
+        <label for="agreement" class="text-sm text-gray-600 leading-5">
+          我已阅读并同意
+          <a href="/terms" target="_blank" class="text-[#c0392b] hover:underline">《服务协议》</a>
+          和
+          <a href="/privacy" target="_blank" class="text-[#c0392b] hover:underline">《隐私政策》</a>
+        </label>
+      </div>
+
+      <button type="submit"
+              class="w-full py-3 bg-[#c0392b] hover:bg-[#96281b] text-white font-semibold rounded-lg shadow transition text-base">
+        注册
+      </button>
+
+      <div class="text-center text-sm text-gray-500">
+        已有账号？<a href="/login" class="text-[#c0392b] hover:underline font-medium">立即登录</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// 获取验证码（与登录页相同逻辑）
+const btnSms = document.getElementById('btn-sms');
+btnSms.addEventListener('click', async () => {
+  const phoneInput = document.querySelector('input[name="phone"]');
+  const phone = phoneInput.value.trim();
+  if (!/^1\d{10}$/.test(phone)) { alert('请输入正确的手机号'); return; }
+  btnSms.disabled = true;
+  btnSms.textContent = '发送中...';
+  try {
+    const res = await fetch('/send-sms', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phone})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      let sec = 60;
+      btnSms.textContent = sec + 's';
+      const timer = setInterval(() => {
+        sec--;
+        btnSms.textContent = sec + 's';
+        if (sec<=0) { clearInterval(timer); btnSms.disabled=false; btnSms.textContent='获取验证码'; }
+      }, 1000);
+    } else {
+      alert(data.msg || '发送失败'); btnSms.disabled=false; btnSms.textContent='获取验证码';
+    }
+  } catch(e) {
+    alert('网络错误'); btnSms.disabled=false; btnSms.textContent='获取验证码';
+  }
+});
+</script>
+
+<%- include('../_foot') %>

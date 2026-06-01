@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>重庆志愿审单</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT:'#c0392b', dark:'#96281b', light:'#e74c3c' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak]{display:none}
+    .badge-rush  { @apply bg-red-100 text-red-700 border border-red-300; }
+    .badge-safe  { @apply bg-green-100 text-green-700 border border-green-300; }
+    .badge-guard { @apply bg-blue-100 text-blue-700 border border-blue-300; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+<!-- 顶部导航 -->
+<header class="bg-brand shadow-md">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 text-white font-bold text-lg tracking-wide hover:opacity-90">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      重庆志愿审单
+    </a>
+    <nav class="flex gap-4 text-sm text-red-100">
+      <a href="/" class="hover:text-white transition">首页</a>
+      <a href="/student" class="hover:text-white transition">学生档案</a>
+      <a href="/upload" class="hover:text-white transition">导入志愿库</a>
+      <a href="/report" class="hover:text-white transition">审单报告</a>
+    </nav>
+  </div>
+</header>
+
+<!-- 内容区 -->
+<main class="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
+  <%- body %>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 text-center text-xs text-gray-400 py-4">
+  重庆高考志愿审单系统 MVP · 仅供内部参考，不作为正式录取依据
+</footer>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<%- include('../_head', {title:'用户管理'}) %>
+
+<div class="space-y-6">
+  <!-- 管理后台导航 -->
+  <div class="flex gap-3 text-sm border-b border-gray-200 pb-3">
+    <a href="/admin" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">仪表盘</a>
+    <a href="/admin/users" class="px-3 py-1.5 bg-[#c0392b] text-white rounded-lg font-medium">用户管理</a>
+    <a href="/admin/audits" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">审单记录</a>
+    <a href="/admin/plans" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">志愿库</a>
+    <a href="/admin/export" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">导出CSV</a>
+  </div>
+
+  <!-- 搜索 -->
+  <form method="GET" action="/admin/users" class="flex gap-2">
+    <input type="text" name="q" value="<%= keyword %>" placeholder="搜索手机号或昵称"
+           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c0392b] outline-none text-sm">
+    <button type="submit" class="px-4 py-2 bg-[#c0392b] text-white text-sm font-medium rounded-lg hover:bg-[#96281b] transition">搜索</button>
+    <% if (keyword) { %>
+    <a href="/admin/users" class="px-4 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition">清除</a>
+    <% } %>
+  </form>
+
+  <!-- 用户列表 -->
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-left">
+            <th class="px-4 py-3 font-medium">ID</th>
+            <th class="px-4 py-3 font-medium">手机号</th>
+            <th class="px-4 py-3 font-medium">昵称</th>
+            <th class="px-4 py-3 font-medium">年级</th>
+            <th class="px-4 py-3 font-medium">区县</th>
+            <th class="px-4 py-3 font-medium">角色</th>
+            <th class="px-4 py-3 font-medium">状态</th>
+            <th class="px-4 py-3 font-medium">注册时间</th>
+            <th class="px-4 py-3 font-medium">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(u => { %>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-400"><%= u.id %></td>
+            <td class="px-4 py-3"><%= u.phone %></td>
+            <td class="px-4 py-3"><%= u.nickname || '-' %></td>
+            <td class="px-4 py-3"><%= u.grade %></td>
+            <td class="px-4 py-3"><%= u.region %></td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-xs font-medium
+                <%= u.role === 'admin' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700' %>">
+                <%= u.role === 'admin' ? '管理员' : '用户' %>
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-xs font-medium
+                <%= u.is_banned ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' %>">
+                <%= u.is_banned ? '已封禁' : '正常' %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-400 text-xs"><%= u.created_at %></td>
+            <td class="px-4 py-3">
+              <% if (u.role !== 'admin') { %>
+              <form method="POST" action="/admin/users/<%= u.id %>/toggle-ban" class="inline">
+                <button type="submit"
+                        class="text-xs px-2 py-1 rounded transition
+                        <%= u.is_banned ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100' %>">
+                  <%= u.is_banned ? '解封' : '封禁' %>
+                </button>
+              </form>
+              <form method="POST" action="/admin/users/<%= u.id %>/delete" class="inline"
+                    onsubmit="return confirm('确定删除该用户？此操作不可恢复！')">
+                <button type="submit"
+                        class="text-xs px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100 transition">
+                  删除
+                </button>
+              </form>
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (users.length === 0) { %>
+          <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">暂无用户</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../_foot') %>

@@ -1,0 +1,190 @@
+<%- include('_head', {title: student.name + ' — 学生详情'}) %>
+
+<div class="flex items-center gap-3 mb-6">
+  <a href="/student" class="text-gray-400 hover:text-gray-600">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+  </a>
+  <h1 class="text-xl font-bold text-gray-900"><%= student.name %> — 学生档案</h1>
+  <div class="ml-auto flex gap-2">
+    <a href="/student/<%= student.id %>/edit"
+       class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition">
+      编辑档案
+    </a>
+    <a href="/upload?student_id=<%= student.id %>"
+       class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition">
+      导入志愿
+    </a>
+    <a href="/report/<%= student.id %>"
+       class="px-4 py-1.5 bg-[#c0392b] text-white text-sm font-semibold rounded-lg hover:bg-[#96281b] transition">
+      查看审单报告
+    </a>
+  </div>
+</div>
+
+<!-- 基本信息卡片 -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+  <div class="bg-white rounded-xl shadow p-4">
+    <div class="text-xs text-gray-500 mb-1">高考总分</div>
+    <div class="text-2xl font-bold text-gray-900"><%= student.total_score %></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4">
+    <div class="text-xs text-gray-500 mb-1">投档分</div>
+    <div class="text-2xl font-bold text-amber-600"><%= student.filing_score != null ? student.filing_score : student.total_score + student.bonus %></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4">
+    <div class="text-xs text-gray-500 mb-1">全市位次</div>
+    <div class="text-2xl font-bold text-gray-900"><%= student.rank.toLocaleString() %></div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4">
+    <div class="text-xs text-gray-500 mb-1">选科</div>
+    <div class="text-base font-semibold text-gray-900"><%= student.prime %> / <%= student.elective1 %> / <%= student.elective2 %></div>
+  </div>
+</div>
+
+<!-- 辅助信息行 -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-gray-100 p-3">
+    <div class="text-xs text-gray-400 mb-0.5">民族</div>
+    <div class="text-sm font-medium"><%= student.nation %></div>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 p-3">
+    <div class="text-xs text-gray-400 mb-0.5">政策加分</div>
+    <div class="text-sm font-medium">+<%= student.bonus %> 分</div>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 p-3">
+    <div class="text-xs text-gray-400 mb-0.5">身高 / 体重</div>
+    <div class="text-sm font-medium">
+      <%= student.height_cm ? student.height_cm + 'cm' : '—' %> /
+      <%= student.weight_kg ? student.weight_kg + 'kg' : '—' %>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 p-3">
+    <div class="text-xs text-gray-400 mb-0.5">裸眼视力（左/右）</div>
+    <div class="text-sm font-medium">
+      <%= student.vision_l || '—' %> / <%= student.vision_r || '—' %>
+    </div>
+  </div>
+</div>
+
+<% if(student.bonus_tags && student.bonus_tags.length) { %>
+<div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex flex-wrap gap-2">
+  <span class="text-xs font-semibold text-green-700 mr-2">加分标签：</span>
+  <% student.bonus_tags.forEach(f => { %>
+  <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded border border-green-200"><%= f %></span>
+  <% }) %>
+</div>
+<% } %>
+
+<% if(student.body_flags && student.body_flags.length) { %>
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex flex-wrap gap-2">
+  <span class="text-xs font-semibold text-amber-700 mr-2">身体受限标签：</span>
+  <% student.body_flags.forEach(f => { %>
+  <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded border border-amber-200"><%= f %></span>
+  <% }) %>
+</div>
+<% } %>
+
+<% if(student.accepted_tuition_tags && student.accepted_tuition_tags.length) { %>
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex flex-wrap gap-2">
+  <span class="text-xs font-semibold text-blue-700 mr-2">接受收费标签：</span>
+  <% student.accepted_tuition_tags.forEach(f => { %>
+  <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded border border-blue-200"><%= f %></span>
+  <% }) %>
+</div>
+<% } %>
+
+<!-- 志愿草稿 -->
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="font-semibold text-gray-800">志愿草稿 (<%= plans.length %> 条)</h2>
+    <button onclick="document.getElementById('addPlanForm').classList.toggle('hidden')"
+            class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+      + 添加志愿
+    </button>
+  </div>
+
+  <!-- 添加志愿表单 -->
+  <form id="addPlanForm" class="hidden mb-6 bg-gray-50 rounded-lg p-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm"
+        method="POST" action="/student/<%= student.id %>/plan">
+    <div>
+      <label class="text-xs text-gray-500 mb-1 block">志愿序号</label>
+      <input type="number" name="seq" min="1" max="96" placeholder="1~96"
+             class="w-full border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-300"/>
+    </div>
+    <div>
+      <label class="text-xs text-gray-500 mb-1 block">批次</label>
+      <select name="batch" class="w-full border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-300">
+        <option>本科批</option><option>本科提前批</option><option>专科批</option>
+      </select>
+    </div>
+    <div class="md:col-span-2">
+      <label class="text-xs text-gray-500 mb-1 block">学校名称</label>
+      <input type="text" name="school_name_input" placeholder="请输入学校名称"
+             class="w-full border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-300"/>
+    </div>
+    <div class="md:col-span-2">
+      <label class="text-xs text-gray-500 mb-1 block">专业名称</label>
+      <input type="text" name="major_name_input" placeholder="请输入专业名称"
+             class="w-full border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-300"/>
+    </div>
+    <div>
+      <label class="text-xs text-gray-500 mb-1 block">风险评估</label>
+      <select name="risk_level" class="w-full border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-300">
+        <option value="">待审</option>
+        <option value="冲">冲</option>
+        <option value="稳">稳</option>
+        <option value="保">保</option>
+      </select>
+    </div>
+    <div class="md:col-span-4 flex gap-2">
+      <button type="submit" class="px-4 py-1.5 bg-[#c0392b] text-white text-xs rounded hover:bg-[#96281b] transition">保存</button>
+      <button type="button" onclick="document.getElementById('addPlanForm').classList.add('hidden')"
+              class="px-4 py-1.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 transition">取消</button>
+    </div>
+  </form>
+
+  <% if(!plans.length) { %>
+  <p class="text-gray-400 text-sm text-center py-8">暂无志愿草稿</p>
+  <% } else { %>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-xs text-gray-500 bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left">序号</th>
+          <th class="px-3 py-2 text-left">批次</th>
+          <th class="px-3 py-2 text-left">学校</th>
+          <th class="px-3 py-2 text-left">专业</th>
+          <th class="px-3 py-2 text-center">风险</th>
+          <th class="px-3 py-2 text-left">备注</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% plans.forEach(p => { %>
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2 text-gray-500"><%= p.seq %></td>
+          <td class="px-3 py-2 text-gray-500 text-xs"><%= p.batch || '—' %></td>
+          <td class="px-3 py-2 font-medium"><%= p.school_name_input || '—' %></td>
+          <td class="px-3 py-2 text-gray-600"><%= p.major_name_input || '—' %></td>
+          <td class="px-3 py-2 text-center">
+            <% if(p.risk_level === '冲') { %>
+              <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">冲</span>
+            <% } else if(p.risk_level === '稳') { %>
+              <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">稳</span>
+            <% } else if(p.risk_level === '保') { %>
+              <span class="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">保</span>
+            <% } else { %>
+              <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">待审</span>
+            <% } %>
+          </td>
+          <td class="px-3 py-2 text-gray-400 text-xs"><%= p.note || '—' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+
+<%- include('_foot') %>

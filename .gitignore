@@ -1,0 +1,14 @@
+node_modules/
+db/*.db
+db/*.db.tmp
+*.db
+*.db.tmp
+uploads/
+.env
+start-public.js
+tunnel.js
+一键启动公网.bat
+启动审单系统.bat
+启动审单系统-公网.bat
+启动审单系统.ps1
+启动审单系统-公网.ps1

@@ -1,0 +1,22 @@
+{
+  "name": "cq-gaokao-mvp",
+  "version": "1.0.0",
+  "description": "重庆高考志愿审单系统 MVP",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "init-db": "node db/init.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.19.0",
+    "multer": "^1.4.5-lts.1",
+    "sql.js": "^1.14.1",
+    "xlsx": "^0.18.5"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^9.4.3"
+  }
+}

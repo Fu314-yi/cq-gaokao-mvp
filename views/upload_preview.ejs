@@ -1,0 +1,207 @@
+<%- include('_head', {title: '预览确认 — ' + student.name}) %>
+
+<div class="max-w-7xl mx-auto">
+
+  <!-- 标题区 -->
+  <div class="flex items-center gap-3 mb-4">
+    <a href="/upload?student_id=<%= student.id %>"
+       class="text-gray-400 hover:text-gray-600 transition">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </a>
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">预览确认</h1>
+      <p class="text-sm text-gray-500">学生：<strong class="text-[#c0392b]"><%= student.name %></strong>
+        &nbsp;|&nbsp; 解析到 <strong><%= rows.length %></strong> 条志愿
+      </p>
+    </div>
+  </div>
+
+  <!-- 警告提示 -->
+  <% if (warnings && warnings.length) { %>
+  <div class="mb-4 bg-amber-50 border border-amber-300 text-amber-700 rounded-xl p-4 text-sm">
+    <p class="font-semibold mb-1">⚠️ 解析警告：</p>
+    <% warnings.forEach(w => { %>
+    <p>• <%= w %></p>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <% if (error) { %>
+  <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded-xl p-4 text-sm">
+    <%= error %>
+  </div>
+  <% } %>
+
+  <!-- 统计栏 -->
+  <div class="flex gap-3 mb-4 text-sm">
+    <span class="px-3 py-1.5 bg-gray-100 rounded-lg font-medium">
+      共 <%= rows.length %> 条
+    </span>
+    <span class="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg font-medium">
+      🔴 解析异常 <%= rows.filter(r => r.parseError).length %> 条
+    </span>
+    <span class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg font-medium">
+      ✅ 正常 <%= rows.filter(r => !r.parseError).length %> 条
+    </span>
+  </div>
+
+  <!-- 操作栏 -->
+  <form method="POST" action="/upload/confirm" id="confirmForm">
+    <input type="hidden" name="cacheKey" value="<%= cacheKey %>">
+
+    <div class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-200 py-3 px-1 mb-3 flex items-center gap-4">
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" id="checkAll" checked
+               class="w-4 h-4 accent-[#c0392b]" />
+        <span class="text-sm font-medium text-gray-700">全选</span>
+      </label>
+      <button type="submit" id="confirmBtn"
+              class="px-6 py-2 bg-[#c0392b] hover:bg-[#96281b] text-white font-semibold rounded-lg transition text-sm disabled:opacity-50">
+        确认导入勾选项
+      </button>
+      <a href="/upload?student_id=<%= student.id %>"
+         class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition text-sm">
+        重新上传
+      </a>
+      <span class="text-xs text-gray-400 ml-auto" id="selectedCount">已选 <%= rows.length %> 条</span>
+    </div>
+
+    <!-- 志愿表格 -->
+    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+          <tr>
+            <th class="px-3 py-3 text-center w-10">选</th>
+            <th class="px-2 py-3 text-center w-10">序号</th>
+            <th class="px-2 py-3 text-left min-w-[60px]">院校代码</th>
+            <th class="px-2 py-3 text-left min-w-[140px]">院校</th>
+            <th class="px-2 py-3 text-left min-w-[140px]">专业</th>
+            <th class="px-2 py-3 text-center w-12">层次</th>
+            <th class="px-2 py-3 text-center w-12">地区</th>
+            <th class="px-2 py-3 text-center w-10">性质</th>
+            <th class="px-2 py-3 text-center min-w-[70px]">选科</th>
+            <th class="px-2 py-3 text-center w-12">学制</th>
+            <th class="px-2 py-3 text-center w-14">学费</th>
+            <th class="px-2 py-3 text-center min-w-[60px]">25最低分</th>
+            <th class="px-2 py-3 text-center min-w-[60px]">25最低位次</th>
+            <th class="px-2 py-3 text-center min-w-[60px]">24最低分</th>
+            <th class="px-2 py-3 text-center min-w-[60px]">24最低位次</th>
+            <th class="px-2 py-3 text-center min-w-[60px]">23最低位次</th>
+            <th class="px-2 py-3 text-center min-w-[60px]">22最低位次</th>
+            <th class="px-2 py-3 text-left min-w-[120px]">状态</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% rows.forEach((r, i) => { %>
+          <tr class="hover:bg-gray-50 transition <%= r.parseError ? 'bg-yellow-50' : '' %>">
+            <td class="px-3 py-2 text-center">
+              <input type="checkbox" name="checked" value="<%= i %>"
+                     <%= r.parseError ? '' : 'checked' %>
+                     class="row-check w-4 h-4 accent-[#c0392b]" />
+            </td>
+            <td class="px-2 py-2 text-center font-mono text-gray-700"><%= r.seq %></td>
+            <td class="px-2 py-2 font-mono text-gray-500 text-xs"><%= r.schoolCode %></td>
+            <td class="px-2 py-2 font-medium text-gray-900">
+              <%= r.schoolName %>
+              <% if (!r.schoolName) { %><span class="text-red-500 text-xs">⚠空</span><% } %>
+            </td>
+            <td class="px-2 py-2 text-gray-700">
+              <%= r.majorName %>
+              <% if (!r.majorName) { %><span class="text-red-500 text-xs">⚠空</span><% } %>
+            </td>
+            <td class="px-2 py-2 text-center text-gray-500 text-xs"><%= r.level %></td>
+            <td class="px-2 py-2 text-center text-gray-500 text-xs"><%= r.region %></td>
+            <td class="px-2 py-2 text-center text-xs">
+              <% if (r.nature === '公办') { %>
+              <span class="text-blue-600">公办</span>
+              <% } else if (r.nature === '民办') { %>
+              <span class="text-orange-600">民办</span>
+              <% } else { %>
+              <span class="text-gray-400"><%= r.nature %></span>
+              <% } %>
+            </td>
+            <td class="px-2 py-2 text-center text-xs">
+              <span class="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600"><%= r.selectionReq || '—' %></span>
+            </td>
+            <td class="px-2 py-2 text-center text-gray-600"><%= r.academicSystem || '—' %></td>
+            <td class="px-2 py-2 text-center text-xs <%= r.tuition === '待定' ? 'text-orange-500' : 'text-gray-600' %>">
+              <%= r.tuition || '—' %>
+            </td>
+            <!-- 2025 -->
+            <td class="px-2 py-2 text-center <%= r.score2025?.min ? 'font-medium text-gray-800' : 'text-gray-300' %>">
+              <%= r.score2025?.min ?? '—' %>
+            </td>
+            <td class="px-2 py-2 text-center <%= r.score2025?.rank ? 'font-medium text-gray-800' : 'text-gray-300' %>">
+              <%= r.score2025?.rank ? r.score2025.rank.toLocaleString() : '—' %>
+            </td>
+            <!-- 2024 -->
+            <td class="px-2 py-2 text-center <%= r.score2024?.min ? 'font-medium text-gray-800' : 'text-gray-300' %>">
+              <%= r.score2024?.min ?? '—' %>
+            </td>
+            <td class="px-2 py-2 text-center <%= r.score2024?.rank ? 'font-medium text-gray-800' : 'text-gray-300' %>">
+              <%= r.score2024?.rank ? r.score2024.rank.toLocaleString() : '—' %>
+            </td>
+            <!-- 2023 -->
+            <td class="px-2 py-2 text-center text-gray-400">
+              <%= r.score2023?.rank ? r.score2023.rank.toLocaleString() : '—' %>
+            </td>
+            <!-- 2022 -->
+            <td class="px-2 py-2 text-center text-gray-400">
+              <%= r.score2022?.rank ? r.score2022.rank.toLocaleString() : '—' %>
+            </td>
+            <!-- 状态 -->
+            <td class="px-2 py-2 text-left">
+              <% if (r.parseError) { %>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full border border-yellow-200">
+                ⚠ 解析异常
+              </span>
+              <div class="text-xs text-yellow-600 mt-0.5"><%= r.parseErrors.join('；') %></div>
+              <% } else { %>
+              <span class="inline-flex items-center px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full border border-green-200">
+                ✅ 正常
+              </span>
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </form>
+</div>
+
+<script>
+// ── 全选/反选 ──
+const checkAll = document.getElementById('checkAll');
+const rowChecks = document.querySelectorAll('.row-check');
+const countEl = document.getElementById('selectedCount');
+
+function updateCount() {
+  const checked = document.querySelectorAll('.row-check:checked').length;
+  countEl.textContent = `已选 ${checked} 条`;
+}
+
+if (checkAll) {
+  checkAll.addEventListener('change', () => {
+    rowChecks.forEach(cb => { cb.checked = checkAll.checked; });
+    updateCount();
+  });
+}
+rowChecks.forEach(cb => {
+  cb.addEventListener('change', () => {
+    checkAll.checked = [...rowChecks].every(c => c.checked);
+    updateCount();
+  });
+});
+updateCount();
+
+// ── 提交 loading ──
+document.getElementById('confirmForm')?.addEventListener('submit', function() {
+  const btn = document.getElementById('confirmBtn');
+  if (btn) { btn.textContent = '导入中…'; btn.disabled = true; }
+});
+</script>
+
+<%- include('_foot') %>
